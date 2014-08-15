@@ -1,12 +1,15 @@
 import 'dart:html';
 import 'dart:math';
 import 'dart:async';
+import 'dart:typed_data';
 
 class CameraView {
   final DivElement container;
   final VideoElement viewport;
   final CanvasElement overlay;
+  final CanvasElement invisCanvas;
   CanvasRenderingContext2D context;
+  CanvasRenderingContext2D invisContext;
   
   int get videoWidth => viewport.videoWidth;
   int get videoHeight => viewport.videoHeight;
@@ -14,22 +17,22 @@ class CameraView {
   num width;
   num height;
   
-  num get canvasWidth => width * window.devicePixelRatio;
-  num get canvasHeight => height * window.devicePixelRatio;
+  int get canvasWidth => (width * window.devicePixelRatio).round();
+  int get canvasHeight => (height * window.devicePixelRatio).round();
   
-  Rectangle<num> get focusRect {
-    num overlaySize = min(width, height) - 30;
-    num rectX = (width - overlaySize) / 2;
-    num rectY = (height - overlaySize) / 2;
-    return new Rectangle<num>(rectX, rectY, overlaySize, overlaySize);
+  Rectangle<int> get focusRect {
+    int overlaySize = (min(width, height) - 30).round();
+    int rectX = ((width - overlaySize) / 2).round();
+    int rectY = ((height - overlaySize) / 2).round();
+    return new Rectangle<int>(rectX, rectY, overlaySize, overlaySize);
   }
   
   static bool get supported => MediaStream.supported;
   
   CameraView(DivElement container) : container = container,
       viewport = container.querySelector('video'),
-      overlay = container.querySelector('canvas') {
-    context = overlay.getContext('2d');
+      overlay = container.querySelector('canvas'),
+      invisCanvas = new CanvasElement() {
   }
   
   void start() {
@@ -46,6 +49,36 @@ class CameraView {
     });
   }
   
+  List<Int32x4> readCubeColors() {
+    invisContext.clearRect(0, 0, canvasWidth, canvasHeight);
+    invisContext.drawImageToRect(viewport, new Rectangle(0, 0,
+        canvasWidth, canvasHeight));
+    ImageData data = invisContext.getImageData(0, 0, canvasWidth, canvasHeight);
+    List<int> buffer = data.data;
+    
+    Rectangle<int> r = focusRect;
+    List<Int32x4> sums = new List<Int32x4>();
+    int secSize = (r.width / 3).round();
+    for (int secY = 0; secY < 3; ++secY) {
+      for (int secX = 0; secX < 3; ++secX) {
+        int startX = r.left + (secX * r.width / 3).round();
+        int startY = r.top + (secY * r.height / 3).round();
+        Int32x4 cur = new Int32x4(0, 0, 0, 0);
+        for (int x = startX; x < startX + secSize; ++x) {
+          for (int y = startY; y < startY + secSize; ++y) {
+            int dataIdx = (x + (y * data.width)) * 4;
+            cur += new Int32x4(buffer[dataIdx], buffer[dataIdx + 1],
+                buffer[dataIdx + 2], 0);
+          }
+        }
+        int count = secSize * secSize;
+        sums.add(new Int32x4(cur.x ~/ count, cur.y ~/ count, cur.z ~/ count,
+            cur.w ~/ count));
+      }
+    }
+    return sums;
+  }
+  
   void resizeCanvas(_) {
     width = videoWidth;
     height = videoHeight;
@@ -59,8 +92,12 @@ class CameraView {
     height *= scale;
     container.style.width = '${width}px';
     container.style.height = '${height}px';
-    overlay.width = (width * window.devicePixelRatio).round();
-    overlay.height = (height * window.devicePixelRatio).round();
+    overlay.width = invisCanvas.width = canvasWidth;
+    overlay.height = invisCanvas.height = canvasHeight;
+    
+    context = overlay.getContext('2d');
+    invisContext = invisCanvas.getContext('2d');
+    
     drawOverlay();
   }
   
@@ -101,4 +138,9 @@ class CameraView {
 void main() {
   CameraView view = new CameraView(querySelector('.video-container'));
   view.start();
+  querySelector('#scan-photo').onClick.listen((_) {
+    DateTime start = new DateTime.now();
+    print('${view.readCubeColors()}');
+    print('${start.difference(new DateTime.now()).inMilliseconds}');
+  });
 }
