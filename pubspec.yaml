@@ -1,0 +1,4 @@
+name: cube_entry
+description: A sample web application
+dependencies:
+  browser: any
