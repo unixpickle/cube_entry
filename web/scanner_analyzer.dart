@@ -1,20 +1,16 @@
 part of cube_entry;
 
 class ScannerAnalyzer {
+  final ScannerCalibration _calibration;
   final ScannerView _view;
   final CanvasElement _canvas;
   CanvasRenderingContext2D _context;
   
-  List<ScannerColor> faceColors;
-  
-  ScannerAnalyzer(this._view) : _canvas = new CanvasElement() {
+  ScannerAnalyzer(this._calibration, this._view) :
+      _canvas = new CanvasElement() {
     _canvas.width = 1024;
     _canvas.height = 1024;
     _context = _canvas.getContext('2d');
-    faceColors = [];
-    for (int i = 0; i < 6; ++i) {
-      faceColors.add(new ScannerColor.fromIdentifier(i));
-    }
   }
   
   int colorOfSquare(int squareIdx) {
@@ -103,7 +99,7 @@ class ScannerAnalyzer {
     int diff = 0x300;
     int face = -1;
     for (int i = 0; i < 6; ++i) {
-      int aDiff = faceColors[i].difference(c);
+      int aDiff = _calibration.faceColors[i].difference(c);
       if (aDiff < diff) {
         diff = aDiff;
         face = i;

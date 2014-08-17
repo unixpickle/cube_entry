@@ -11,6 +11,7 @@ class ScannerOverlay {
   
   setup(num videoWidth, num videoHeight) {
     double scale = window.devicePixelRatio;
+    
     _canvas.width = (scale * videoWidth).round();
     _canvas.height = (scale * videoHeight).round();
     
