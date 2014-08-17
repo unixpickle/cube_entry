@@ -30,44 +30,4 @@ class ScannerColor {
     return (red - c.red).abs() + (green - c.green).abs() +
         (blue - c.blue).abs();  
   }
-  
-  int faceColor() {
-    List<double> hsv = toHSV();
-    if (hsv[1] < 0.3) {
-      return COLOR_WHITE;
-    } else if (hsv[0] >= 14 && hsv[0] < 39) {
-      return COLOR_ORANGE;
-    } else if (hsv[0] >= 39 && hsv[0] < 75) {
-      return COLOR_YELLOW;
-    } else if (hsv[0] >= 75 && hsv[0] < 166) {
-      return COLOR_GREEN;
-    } else if (hsv[0] >= 166 && hsv[0] < 307) {
-      return COLOR_BLUE;
-    }
-    return COLOR_RED;
-  }
-  
-  List<double> toHSV() {
-    // I borrowed this guy's code http://www.javascripter.net/faq/rgb2hsv.htm
-    
-    double r = red / 255.0;
-    double g = green / 255.0;
-    double b = blue / 255.0;
-    
-    var minRGB = min(r, min(g, b));
-    var maxRGB = max(r, max(g, b));
-    
-    // Black-gray-white
-    if (minRGB == maxRGB) {
-      return [0, 0, minRGB];
-    }
-    
-    // Colors other than black-gray-white:
-    var d = (r == minRGB) ? g - b : ((b == minRGB) ? r - g : b - r);
-    var h = (r == minRGB) ? 3 : ((b == minRGB) ? 1 : 5);
-    num computedH = 60 * (h - d / (maxRGB - minRGB));
-    num computedS = (maxRGB - minRGB) / maxRGB;
-    num computedV = maxRGB;
-    return [computedH, computedS, computedV];
-  }
 }

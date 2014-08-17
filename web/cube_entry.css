@@ -23,3 +23,33 @@ div.video-container video, div.video-container canvas {
   width: 100%;
   height: 100%;
 }
+
+.face-colors {
+  display: inline-block;
+  text-align: center;
+}
+
+.face-color {
+  display: inline-block;
+  width: 70px;
+}
+
+.face-color label {
+  display: block;
+}
+
+.face-color div {
+  display: inline-block;
+  width: 30px;
+  height: 30px;
+  
+  border-radius: 15px;
+  webkit-border-radius: 15px;
+  moz-border-radius: 15px;
+  
+  border: solid 1px #000;
+}
+
+.face-color button {
+  display: inline-block;
+}

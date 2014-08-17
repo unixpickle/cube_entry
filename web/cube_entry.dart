@@ -8,6 +8,7 @@ part 'scanner_view.dart';
 part 'scanner_overlay.dart';
 part 'scanner_analyzer.dart';
 part 'scanner_color.dart';
+part 'scanner_calibration.dart';
 
 void main() {
   ScannerView view = new ScannerView(querySelector('.video-container'));

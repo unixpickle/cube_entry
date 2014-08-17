@@ -5,10 +5,16 @@ class ScannerAnalyzer {
   final CanvasElement _canvas;
   CanvasRenderingContext2D _context;
   
+  List<ScannerColor> faceColors;
+  
   ScannerAnalyzer(this._view) : _canvas = new CanvasElement() {
     _canvas.width = 1024;
     _canvas.height = 1024;
     _context = _canvas.getContext('2d');
+    faceColors = [];
+    for (int i = 0; i < 6; ++i) {
+      faceColors.add(new ScannerColor.fromIdentifier(i));
+    }
   }
   
   int colorOfSquare(int squareIdx) {
@@ -34,26 +40,13 @@ class ScannerAnalyzer {
     ImageData data = _context.getImageData(0, 0, _canvas.width, _canvas.height);
     List<int> values = data.data;
     
-    List<ScannerColor> defaults = [];
-    for (int i = 0; i < 6; ++i) {
-      defaults.add(new ScannerColor.fromIdentifier(i));
-    }
-    
     List<int> result = [];
     for (int y = 0; y < data.height; ++y) {
       for (int x = 0; x < data.width; ++x) {
         int idx = 4 * (x + (y * data.width));
         ScannerColor color = new ScannerColor(values[idx], values[idx + 1],
             values[idx + 2]);
-        int colorIdx = -1;
-        int diff = 0x300;
-        for (int i = 0; i < 6; ++i) {
-          if (defaults[i].difference(color) <= diff) {
-            colorIdx = i;
-            diff = defaults[i].difference(color);
-          }
-        }
-        result.add(colorIdx);
+        result.add(_faceColor(color));
       }
     }
     return result;
@@ -78,7 +71,7 @@ class ScannerAnalyzer {
         int idx = 4 * (x + (y * data.width));
         ScannerColor color = new ScannerColor(values[idx], values[idx + 1],
             values[idx + 2]);
-        int colorIdx = color.faceColor();
+        int colorIdx = _faceColor(color);
         ScannerColor defaultColor = new ScannerColor.fromIdentifier(colorIdx);
         values[idx] = defaultColor.red;
         values[idx + 1] = defaultColor.green;
@@ -104,6 +97,19 @@ class ScannerAnalyzer {
     _context.drawImageScaled(_view._viewport, -x * scale, -y * scale,
         _view._viewport.videoWidth * scale,
         _view._viewport.videoHeight * scale);
+  }
+  
+  int _faceColor(ScannerColor c) {
+    int diff = 0x300;
+    int face = -1;
+    for (int i = 0; i < 6; ++i) {
+      int aDiff = faceColors[i].difference(c);
+      if (aDiff < diff) {
+        diff = aDiff;
+        face = i;
+      }
+    }
+    return face;
   }
   
 }
